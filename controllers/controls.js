@@ -124,7 +124,7 @@ exports.forgotPassword=async function (req,res){
 
             await user.save({validateBeforeSave:false})
 
-            const url=`${req.protocol}://${req.hostname}:${process.env.PORT}/password/reset/${forgotToken}`
+            const url=`${req.protocol}://${req.hostname}:${process.env.PORT}/user/v1/password/reset/${forgotToken}`
 
             const data={
                 email:user.email,
@@ -149,3 +149,169 @@ exports.forgotPassword=async function (req,res){
     }
 }
 
+exports.details=async function (req,res){
+
+    //checking for that id
+    if(req.id)
+    {
+        const user=await userSchema.findOne({_id:req.id})
+        user.password=undefined
+        user.forgotPasswordToken=undefined
+        user.forgotPasswordTokenExpiry=undefined
+
+        res.status(200).json({
+            success:"true",user
+        })
+    }
+    else
+    {
+        res.status(404).send("user not found")
+    }
+}
+
+exports.passwordUpdate=async function (req,res){
+    if(req.id)
+    {
+        //grab the user based on id
+
+        const user=await userSchema.findById({_id:req.id})
+
+        //check original password
+        const {oldPassword}=req.body
+
+        const result=await user.validatePassword(oldPassword)
+
+        if(result)
+        {
+            const {newPassword}=req.body
+            user.password=newPassword
+
+            await user.save()
+
+            res.status(200).send("Password Updated Successfully")
+        }
+        else
+        {
+            res.status(404).send("Incorrect Password")
+        }
+    }
+    else
+    {
+        res.status(404).send("Login first")
+    }
+}
+
+exports.updateUserDetail=async function(req,res){
+
+    const newData={
+        name:req.body.name,
+        email:req.body.email
+    }
+
+    if(req.files)
+    {
+        const user=userSchema.findById(req.id)
+
+        await cloudinary.v2.uploader.destroy(user.photo.id)
+
+        const result=await cloudinary.v2.uploader.upload(req.files.photo.tempFilePath,{
+            folder:"users",
+            width:150,
+            crop:"scale"
+        })
+
+        newData.photo={
+            id:result.public_id,
+            secure_url:result.secure_url
+        }
+    }
+
+    const user=await userSchema.findByIdAndUpdate(req.id,newData,{
+        new:true,
+        runValidators:true
+    })
+
+    res.status(200).json({
+        success:true,
+        user
+    })
+}
+
+exports.adminAllUsers=async function (req,res){
+
+    //if we are here then the user is admin
+
+    const user=await userSchema.find({})
+
+    res.status(200).json({
+        success:true,
+        user
+    })
+}
+
+
+exports.adminGetSingleUser=async function(req,res){
+
+    //getting id from url
+    const userId=req.params.id
+
+    const user=await userSchema.findById(userId)
+
+    if(user)
+    {
+        res.status(200).json({
+            success:true,
+            user
+        })
+    }
+    else
+    {
+        res.status(404).send("User not found")
+    }
+}
+
+exports.adminUpdateSingleUser=async function(req,res){
+
+    const userId=req.params.id
+    const user=userSchema.findById(userId)
+
+    const data={
+        name:req.body.name,
+        email:req.body.email,
+        role:req.body.role
+    }
+  
+    if(!user)
+    {
+        res.status(404).send("User not found")
+    }
+    else
+    {
+        user=userSchema.findByIdAndUpdate(userId,data)
+        res.status(200).json({
+            success:true,
+            user
+        })
+    }
+}
+
+exports.adminDeleteUser=async function (req,res){
+
+    const user=await userSchema.findById(req.params.id)
+
+    if(user)
+    {
+    const photoId=user.photo.id
+
+    await cloudinary.v2.uploader.destroy(photoId)
+
+    await userSchema.findByIdAndDelete(req.params.id)
+
+    res.status(200).send("User deleted Successfully")
+    }
+    else
+    {
+        res.status(404).send("No user found")
+    }
+
+}
