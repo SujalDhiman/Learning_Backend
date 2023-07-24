@@ -249,7 +249,6 @@ exports.adminAllUsers=async function (req,res){
     })
 }
 
-
 exports.adminGetSingleUser=async function(req,res){
 
     //getting id from url
