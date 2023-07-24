@@ -18,7 +18,6 @@ const userSchema=new mongoose.Schema({
     password:{
         type:String,
         unique:[true,"Enter new password"],
-        minLength:[6,"Password should be atleast 6 characters"],
         required:[true,"This field is required"]
     },
     role:{
@@ -28,12 +27,10 @@ const userSchema=new mongoose.Schema({
     },
     photo:{
         id:{
-            type:String,
-            required:[true,"This is Required "]
+            type:String
         },
         secure_url:{
-            type:String,
-            requierd:[true,"This is Required "]
+            type:String
         }
     },
     forgotPasswordToken:String,
@@ -42,9 +39,9 @@ const userSchema=new mongoose.Schema({
 
 //Hashing the password before save
 userSchema.pre("save",async function (next){
-    if(!this.isModified(password))
+    if(!this.isModified("password"))
     {
-        next()
+        return next()
     }
     this.password=await bcrypt.hash(this.password,10)
 })
@@ -52,7 +49,7 @@ userSchema.pre("save",async function (next){
 //validating Password
 userSchema.methods.validatePassword=async function (gotPassword){
     try{
-    return await bcrypt.compare(this.password,gotPassword)
+    return await bcrypt.compare(gotPassword,this.password)
     }
     catch(error)
     {
