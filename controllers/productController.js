@@ -1,5 +1,5 @@
 const productSchema=require("../models/product.model")
-
+const userSchema=require("../models/user.model")
 const cloudinary=require("cloudinary");
 const whereClause = require("../utils/whereclause");
 
@@ -132,4 +132,66 @@ exports.updateProduct=async function(req,res){
             }
         }
     }    
+}
+
+exports.giveReview=async function(req,res){
+
+    let reviewObject={}
+    //grabbing id of the product   
+    const productId=req.params.id
+
+    //finding product corresponding to the id
+    let product=await productSchema.findById(productId)
+
+    if(product)
+    {
+        const user=await userSchema.findById(req.id)
+        if(user)
+        {
+            const {rating,comment}=req.body
+
+            //setting up review properties
+            reviewObject.user=user._id
+            reviewObject.name=user.name
+            reviewObject.rating=Number(rating)
+            reviewObject.comment=comment
+
+            //check whether review already exist
+
+            let userReviewExists=product.reviews.find((ele)=>ele.user.toString() === req.id.toString())
+            let appendReviews=[]
+            if(userReviewExists)
+            {
+                product.reviews.forEach((ele)=>{
+                    if(ele.user.toString() === req.id.toString())
+                    {
+                        ele.rating=Number(reviewObject.rating)
+                        ele.comment=reviewObject.comment
+                    }
+                })
+            }
+            else
+            {
+                appendReviews=product.reviews
+                appendReviews.push(reviewObject)
+
+                product.reviews=appendReviews
+            }
+
+            product.numberOfReviews=product.reviews.length
+            product.ratings=Number(product.reviews.reduce((acc,current)=>acc+current.rating,0))/Number(product.reviews.length)
+
+            await product.save({validateBeforeSave:false})
+            res.status(200).send("Successful")
+        }
+        else
+        {
+            res.status(404).send("user does not exist")
+        }
+    }
+    else
+    {
+        res.status(404).send("no such product found")
+    }
+
 }
