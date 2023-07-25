@@ -92,7 +92,6 @@ exports.deleteProduct=async function(req,res){
             }
             res.status(200).send("everything deleted")
         }
-    
     }
 }
 
@@ -192,6 +191,39 @@ exports.giveReview=async function(req,res){
     else
     {
         res.status(404).send("no such product found")
+    }
+
+}
+
+exports.deleteReview=async function(req,res){
+
+    const productId=req.params.id
+
+    //finding product
+
+    let product=await productSchema.findById(productId)
+
+    if(product)
+    {
+        const newReview=product.reviews.filter((rev)=>rev.user.toString() !== req.id.toString())
+
+        const numberOfReviews=newReview.length
+        const ratings= product.reviews.reduce((acc,curr)=>acc+curr.rating,0)/numberOfReviews
+
+        product=await productSchema.findByIdAndUpdate(productId,{
+            reviews:newReview,
+            numberOfReviews,
+            ratings
+        },{new:true})
+
+        res.status(200).json({
+            success:true,
+            product
+        })
+    }
+    else
+    {
+        res.status(404).send("Product not found")
     }
 
 }
