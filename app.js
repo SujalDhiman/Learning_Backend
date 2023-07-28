@@ -6,6 +6,7 @@ const cookieParser=require("cookie-parser")
 const cloudinary=require("cloudinary")
 const expressFileUpload=require("express-fileupload")
 const product=require("./routers/product")
+const payment=require("./routers/payment")
 
 //connecting database
 connectTODB()
@@ -26,6 +27,7 @@ app.use(express.urlencoded({extended:true}))
 
 app.use("/user/v1",router)
 app.use("/user/v1",product)
+app.use("/user/v1",payment)
 
 
 module.exports=app
