@@ -3,6 +3,7 @@ const userSchema=require("../models/user.model")
 const cloudinary=require("cloudinary");
 const whereClause = require("../utils/whereclause");
 
+
 exports.addProduct=async function(req,res){
 
     let result;
@@ -227,3 +228,4 @@ exports.deleteReview=async function(req,res){
     }
 
 }
+
