@@ -6,7 +6,7 @@ const {sendStripeKey,captureStripePayment}=require("../controllers/paymentContro
 
 
 router.get("/stripekey",isLoggedIn,sendStripeKey)
-router.post("/stripePayment".isLoggedIn,captureStripePayment)
+router.post("/stripePayment",isLoggedIn,captureStripePayment)
 
 
 module.exports=router
