@@ -7,7 +7,7 @@ const cloudinary=require("cloudinary")
 const expressFileUpload=require("express-fileupload")
 const product=require("./routers/product")
 const payment=require("./routers/payment")
-
+const order=require("./routers/order")
 //connecting database
 connectTODB()
 
@@ -28,6 +28,7 @@ app.use(express.urlencoded({extended:true}))
 app.use("/user/v1",router)
 app.use("/user/v1",product)
 app.use("/user/v1",payment)
+app.use("/user/v1",order)
 
 
 module.exports=app
